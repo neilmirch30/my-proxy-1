@@ -13,6 +13,8 @@ fi
 
 IPTABLES="iptables"
 IFCONFIG="ifconfig"
+mainip=""
+mainif=""
 
 set -e
 set -x
@@ -78,7 +80,9 @@ add_alias()
 	local ifc="$1"
 	local count=$2
 	local ip="$3"
-	$IFCONFIG $ifc:$count $ip netmask 255.255.255.255 up
+	if [ "$ip" != "$mainip" ]; then
+		$IFCONFIG $ifc:$count $ip netmask 255.255.255.255 up
+	fi
 }
 
 create_chain()
@@ -244,6 +248,7 @@ add_users()
 
 do_setup()
 {
+	local count
 	local ip_list
 	if [ ! -d /etc/squid ]; then
 		error_exit "Squid is not installed yet."
@@ -254,7 +259,6 @@ do_setup()
 	mainif=$(ip addr show | grep "$mainip" | awk '{print $7}')
 	[ -z "$mainif" ] && error_exit "Could not find network interface on which $mainip is located"
 	echo Main interface is $mainif
-	count=0
 	cp ./files/squid.conf /etc/squid/squid.conf
 	touch /etc/squid/passwords /etc/squid/acls.conf /etc/squid/myips.conf
 	truncate --size 0 /etc/squid/myips.conf
@@ -267,9 +271,9 @@ do_setup()
 	iptables -t nat -I PREROUTING -j MYPROXY
 
 	ip_list=$(generate_ip_list)
+
 	count=0
 	for ip in $ip_list; do
-		echo $ip
 		add_alias $mainif $count $ip
 		add_my_ip_to_squid $ip
 		count=$(expr $count + 1)
