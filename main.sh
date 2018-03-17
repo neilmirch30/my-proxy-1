@@ -101,8 +101,10 @@ create_chain()
 	fi
 	if [ -n "$srcip" ]; then
 		$IPTABLES -t nat -A MYPROXY -p tcp -s "$srcip" -j $chain
+		$IPTABLES -t mangle -I MYPROXY -p tcp -s "$srcip" -j ACCEPT
 	else
 		$IPTABLES -t nat -A MYPROXY -p tcp -j $chain
+		$IPTABLES -t mangle -I MYPROXY -p tcp -s "$srcip" -j ACCEPT
 	fi
 }
 
@@ -267,8 +269,14 @@ do_setup()
 
 	iptables -t nat -F 
 	iptables -t nat -X
+	iptables -t mangle -F
+	iptables -t mangle -X
 	iptables -t nat -N MYPROXY
+	iptables -t mangle -N MYPROXY
 	iptables -t nat -I PREROUTING -j MYPROXY
+	iptables -t mangle -A PREROUTING -p tcp --dport 22 -j ACCEPT
+	iptables -t mangle -A PREROUTING -j MYPROXY
+	sudo iptables -t mangle -A PREROUTING -p tcp -m state --state NEW --dport 3128 -j DROP
 
 	ip_list=$(generate_ip_list)
 
