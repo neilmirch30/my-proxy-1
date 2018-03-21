@@ -104,7 +104,7 @@ create_chain()
 		$IPTABLES -t mangle -I MYPROXY -p tcp -s "$srcip" -j ACCEPT
 	else
 		$IPTABLES -t nat -A MYPROXY -p tcp -j $chain
-		$IPTABLES -t mangle -I MYPROXY -p tcp -s "$srcip" -j ACCEPT
+		$IPTABLES -t mangle -I MYPROXY -p tcp -j ACCEPT
 	fi
 }
 
