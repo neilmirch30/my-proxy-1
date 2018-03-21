@@ -13,6 +13,8 @@ fi
 
 IPTABLES="iptables"
 IFCONFIG="ifconfig"
+TRUNCATE="truncate"
+CP="cp"
 mainip=""
 mainif=""
 
@@ -261,22 +263,22 @@ do_setup()
 	mainif=$(ip addr show | grep "$mainip" | awk '{print $7}')
 	[ -z "$mainif" ] && error_exit "Could not find network interface on which $mainip is located"
 	echo Main interface is $mainif
-	cp ./files/squid.conf /etc/squid/squid.conf
+	$CP ./files/squid.conf /etc/squid/squid.conf
 	touch /etc/squid/passwords /etc/squid/acls.conf /etc/squid/myips.conf
-	truncate --size 0 /etc/squid/myips.conf
-	truncate --size 0 /etc/squid/acls.conf
-	truncate --size 0 /etc/squid/passwords
+	$TRUNCATE --size 0 /etc/squid/myips.conf
+	$TRUNCATE --size 0 /etc/squid/acls.conf
+	$TRUNCATE --size 0 /etc/squid/passwords
 
-	iptables -t nat -F 
-	iptables -t nat -X
-	iptables -t mangle -F
-	iptables -t mangle -X
-	iptables -t nat -N MYPROXY
-	iptables -t mangle -N MYPROXY
-	iptables -t nat -I PREROUTING -j MYPROXY
-	iptables -t mangle -A PREROUTING -p tcp --dport 22 -j ACCEPT
-	iptables -t mangle -A PREROUTING -j MYPROXY
-	sudo iptables -t mangle -A PREROUTING -p tcp -m state --state NEW --dport 3128 -j DROP
+	$IPTABLES -t nat -F 
+	$IPTABLES -t nat -X
+	$IPTABLES -t mangle -F
+	$IPTABLES -t mangle -X
+	$IPTABLES -t nat -N MYPROXY
+	$IPTABLES -t mangle -N MYPROXY
+	$IPTABLES -t nat -I PREROUTING -j MYPROXY
+	$IPTABLES -t mangle -A PREROUTING -p tcp --dport 22 -j ACCEPT
+	$IPTABLES -t mangle -A PREROUTING -j MYPROXY
+	$IPTABLES -t mangle -A PREROUTING -p tcp -m state --state NEW --dport 3128 -j DROP
 
 	ip_list=$(generate_ip_list)
 
@@ -300,7 +302,7 @@ do_reset()
 	./reset.sh
 	rm -f /etc/squid/passwords /etc/squid/acls.conf /etc/squid/myips.conf
 	if [ -f /etc/squid/squid.conf ]; then
-		cp ./files/squid.conf.org /etc/squid/squid.conf
+		$CP ./files/squid.conf.org /etc/squid/squid.conf
 	fi
 	squid -k reconfigure
 }
