@@ -260,7 +260,7 @@ do_setup()
 
 	mainip=$(grep "^MainIP" -i proxy.conf | awk '{print $2}')
 	[ -z "$mainip" ] && error_exit "MainIP $mainip not found on any interface"
-	mainif=$(ip addr show | grep "$mainip" | awk '{print $7}')
+	mainif=$(ip addr show | grep "$mainip/" | awk '{print $7}')
 	[ -z "$mainif" ] && error_exit "Could not find network interface on which $mainip is located"
 	echo Main interface is $mainif
 	$CP ./files/squid.conf /etc/squid/squid.conf
